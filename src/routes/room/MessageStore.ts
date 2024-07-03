@@ -1,40 +1,57 @@
 import { writable, type Writable } from 'svelte/store';
-import { type Message } from '$lib/types';
+import { type Message, type User } from '$lib/types';
 import { io } from 'socket.io-client';
+import { user } from '../UserStore';
+import { notifier } from '@beyonk/svelte-notifications';
+import { goto } from '$app/navigation';
 
 export const MessageStore: Writable<Message[]> = writable([]);
 
 const websocket = io('http://localhost:3000');
-const username = Math.floor(Math.random() * 1e12);
+let user_instance: User | null = null;
 
 export const start_connection = () => {
-	websocket.emit('join', 'coolkids');
+	user.update((user) => {
+		user_instance = user;
+		return user;
+	});
+	if (user_instance == null) {
+		goto('/join');
+		return;
+	}
 
-	websocket.on('chat', (msg: string) => {
-		const new_message = JSON.parse(msg);
-		// console.log(new_message);
+	websocket.emit('join', user_instance.room);
 
-		MessageStore.update((messages: Message[]) => {
-			return [new_message, ...messages];
+	websocket.on('join success', () => {
+		websocket.on('message', (msg: string) => {
+			const new_message = JSON.parse(msg);
+
+			MessageStore.update((messages: Message[]) => {
+				return [new_message, ...messages];
+			});
 		});
+	});
+
+	websocket.on('join fail', () => {
+		notifier.danger('failed to join room', 5000);
+		console.error('failed to join room');
 	});
 };
 
 export const send_message = (msg: string) => {
 	const message_object: Message = {
 		content: msg,
-		sender: username + '',
+		sender: user_instance?.name ?? 'unknown',
 	};
-
-    // sender can't see his own message 
-	MessageStore.update((messages: Message[]) => {
-		return [message_object, ...messages];
-	});
 
 	const new_message = JSON.stringify(message_object);
 
-	websocket.emit('chat', {
-		room: 'coolkids',
+	websocket.emit('message', {
+		room: user_instance?.room.name,
 		message: new_message,
 	});
+};
+
+export const end_connection = () => {
+	websocket.emit('leave', user_instance?.room.name);
 };

@@ -1,29 +1,64 @@
 <script lang="ts">
 	import Form from '$lib/Form.svelte';
-	import type { RoomQuery } from '$lib/types';
-	const room_query: RoomQuery = {
-		name: '',
-		password: '',
-	};
-	let display_name = '';
 
 	import { page } from '$app/stores';
-	const name = $page.url.searchParams.get('name');
-	room_query.name = name ?? '';
+	import { notifier } from '@beyonk/svelte-notifications';
+	import { goto } from '$app/navigation';
+	import { user } from '../UserStore';
+	import type { User } from '$lib/types';
 
-	const submit = () => {};
+	const new_user: User = {
+		name: '',
+		room: {
+			name: '',
+			password: '',
+		},
+	};
+
+	user.update((user) => {
+		if (user) {
+			new_user.name = user?.name ?? '';
+			new_user.room.name = user?.room.name ?? '';
+		}
+		return user;
+	});
+	const room_name = $page.url.searchParams.get('name');
+	new_user.room.name = room_name ?? new_user.room.name;
+
+	const submit = () => {
+		fetch('http://localhost:3000/validate', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(new_user),
+		})
+			.then((res) =>
+				res.text().then((data) => {
+					if (res.ok) {
+						notifier.success(data, 5000);
+						user.set(new_user);
+						goto('/room');
+					} else notifier.danger(data, 5000);
+				})
+			)
+			.catch((error) => {
+				notifier.danger('failed to connect', 5000);
+				console.error(error);
+			});
+	};
 </script>
 
 <main>
 	<Form onsubmit={submit}>
 		<h2>join a room</h2>
 		<div>
-			<label for="display_name">display name:</label>
+			<label for="user-nam">display name:</label>
 			<input
 				required
 				type="text"
-				id="name"
-				bind:value={display_name}
+				id="user-nam"
+				bind:value={new_user.name}
 				placeholder="people will see you as this"
 			/>
 		</div>
@@ -33,17 +68,16 @@
 				required
 				type="text"
 				id="name"
-				bind:value={room_query.name}
+				bind:value={new_user.room.name}
 				placeholder="double check!"
 			/>
 		</div>
 		<div>
 			<label for="password">password:</label>
 			<input
-				required
 				type="password"
 				id="password"
-				bind:value={room_query.password}
+				bind:value={new_user.room.password}
 				placeholder="be careful sharing this"
 			/>
 		</div>

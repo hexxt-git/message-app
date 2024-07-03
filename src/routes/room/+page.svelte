@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import {
 		MessageStore,
 		send_message,
 		start_connection,
+		end_connection,
 	} from './MessageStore';
+	import { user } from '../UserStore';
 
 	const submit = (event: any) => {
 		const input = event.target.input;
@@ -13,35 +15,50 @@
 		input.value = '';
 	};
 
-	onMount(start_connection);
+	onMount(() => start_connection());
+	onDestroy(() => end_connection());
 </script>
 
 <main>
 	<div class="chat">
-		{#each $MessageStore as message}
-			<div class="message">{message.content}</div>
-			<div class="sender">{message.sender}:</div>
-		{/each}
+		{#if $MessageStore.length >= 1}
+			{#each $MessageStore as message}
+				<div
+					class="message {message.sender == $user?.name
+						? 'my-message'
+						: ''}"
+				>
+					{message.content}
+				</div>
+				{#if message.sender != $user?.name}
+					<div class="sender">{message.sender}:</div>
+				{/if}
+			{/each}
+		{:else}
+			<h2>no messages were sent yet. be the first!</h2>
+		{/if}
 		<form on:submit|preventDefault={submit}>
 			<input type="text" placeholder="send a message" id="input" />
 			<button type="submit">send</button>
 		</form>
 	</div>
-	<div class="participants">
+	<!-- <div class="participants">
 		<h2>participants</h2>
 		<div>test</div>
-	</div>
+	</div> -->
 </main>
 
 <style>
 	main {
 		display: grid;
-		grid-template-columns: 1fr 400px;
+		grid-template-columns: 1fr;
 		height: 100vh;
 		width: 100vw;
 		overflow: hidden;
+		border: solid #aaa 1px;
+		box-sizing: border-box;
 	}
-	.participants {
+	/* .participants {
 		border-left: solid #aaa 1px;
 		display: flex;
 		flex-direction: column;
@@ -66,7 +83,7 @@
 		height: 10px;
 		border-radius: 100%;
 		background-color: rgb(123, 255, 47);
-	}
+	} */
 	.chat {
 		position: relative;
 		display: flex;
@@ -76,6 +93,14 @@
 		scrollbar-width: thin;
 		padding: 15px;
 		padding-bottom: 110px;
+	}
+	.chat h2 {
+		height: 100vh;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		color: #bbb;
+		font-size: 2em;
 	}
 	form {
 		position: absolute;
@@ -117,6 +142,10 @@
 		width: fit-content;
 		max-width: 80%;
 		margin-bottom: 3px;
+	}
+	.my-message {
+		background-color: #ddd;
+		margin-left: auto;
 	}
 	.sender {
 		padding: 0 8px;

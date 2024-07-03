@@ -28,7 +28,7 @@
 	nav {
 		position: fixed;
 		top: 0;
-		right: 20%;
+		left: 15%;
 		border: solid #999 1px;
 		border-top: none;
 		padding: 12px 30px;

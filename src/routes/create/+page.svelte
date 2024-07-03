@@ -1,13 +1,33 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import Form from '$lib/Form.svelte';
 	import type { Room } from '$lib/types';
+	import { notifier } from '@beyonk/svelte-notifications';
 	const new_room: Room = {
 		name: '',
 		is_private: true,
 		password: '',
-		max_participants: 100,
 	};
-	const submit = () => {};
+	const submit = () => {
+		fetch('http://localhost:3000/create', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(new_room),
+		}).then((res) => res.text().then((message)=>{
+			if(res.ok) {
+				notifier.success(message, 5000)
+				setTimeout(()=>{
+					goto(`/join?name=${new_room.name}`)
+				}, 1000)
+			}
+			else notifier.danger(message, 5000)
+		})).catch(error => {
+			notifier.danger('failed to connect', 5000)
+			console.error(error)
+		});
+	};
 </script>
 
 <main>
@@ -26,7 +46,6 @@
 		<div>
 			<label for="is-private">private room:</label>
 			<input
-				required
 				type="checkbox"
 				id="is-private"
 				bind:checked={new_room.is_private}
@@ -44,23 +63,6 @@
 				/>
 			</div>
 		{/if}
-		<div>
-			<label for="max-participants">max participants:</label>
-			<input
-				required
-				type="range"
-				min="2"
-				max="100"
-				step="1"
-				bind:value={new_room.max_participants}
-				id="max-participants"
-			/>
-			<span>
-				{new_room.max_participants < 100
-					? new_room.max_participants
-					: '∞'}
-			</span>
-		</div>
 		<input required type="submit" value="create" />
 	</Form>
 </main>
