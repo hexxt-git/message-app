@@ -1,18 +1,29 @@
 <script lang="ts">
-	const send_message = () => {};
-    
+	import { onMount } from 'svelte';
+	import {
+		MessageStore,
+		send_message,
+		start_connection,
+	} from './MessageStore';
+
+	const submit = (event: any) => {
+		const input = event.target.input;
+		if (!input.value) return;
+		send_message(input.value);
+		input.value = '';
+	};
+
+	onMount(start_connection);
 </script>
 
 <main>
 	<div class="chat">
-        <div class="message">messages</div>
-		<div class="sender">user_123:</div>
-		<div class="message">messages</div>
-		<div class="sender">user_123:</div>
-		<div class="message">messages</div>
-		<div class="sender">user_123:</div>
-		<form on:submit|preventDefault={send_message}>
-			<input type="text" placeholder="send a message" />
+		{#each $MessageStore as message}
+			<div class="message">{message.content}</div>
+			<div class="sender">{message.sender}:</div>
+		{/each}
+		<form on:submit|preventDefault={submit}>
+			<input type="text" placeholder="send a message" id="input" />
 			<button type="submit">send</button>
 		</form>
 	</div>
@@ -60,7 +71,8 @@
 		position: relative;
 		display: flex;
 		flex-direction: column-reverse;
-		overflow-y: scroll;
+		overflow-y: auto;
+		overflow-x: hidden;
 		scrollbar-width: thin;
 		padding: 15px;
 		padding-bottom: 110px;
