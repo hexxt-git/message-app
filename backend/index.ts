@@ -20,11 +20,13 @@ interface Room {
 
 const rooms: Room[] = [
 	{
-		name: 'coolkids',
-		is_private: true,
-		password: '123',
+		name: 'testing',
+		is_private: false,
+		password: '',
 	},
 ];
+
+const room_participants: any = {};
 
 app.get('/', (req, res) => {
 	res.send('welcome');
@@ -53,7 +55,8 @@ app.post('/validate', (req, res) => {
 		return;
 	}
 	if (room.password != new_user.room.password) {
-		if (new_user.room.password.length >= 1) res.status(400).send('wrong password');
+		if (new_user.room.password.length >= 1)
+			res.status(400).send('wrong password');
 		else res.status(400).send('password required');
 		return;
 	}
@@ -64,33 +67,49 @@ app.post('/validate', (req, res) => {
 
 io.on('connection', (socket) => {
 	console.log('a user connected');
+	let user_name: string | null;
+	let room_name: string;
 
-	socket.on('join', ({ name, password }) => {
+	socket.on('join', ({ username, name, password }) => {
 		const room = rooms.find((room) => room.name == name);
 		if ((room && room.password == password) || (room && !room.is_private)) {
 			socket.join(name);
 			console.log(`User joined room: ${name}`);
 			socket.emit('join success');
+			user_name = username;
+			room_name = name;
+			room_participants[room_name] = [
+				...(room_participants[room_name] || []),
+				user_name,
+			];
+			io.to(room_name).emit(
+				'participants',
+				JSON.stringify(room_participants[room_name])
+			);
 		} else {
 			console.log(
-				`User failed to joined: ${name} using password ${password}`
+				`User failed to joined: ${name} using password: ${password}`
 			);
 			socket.emit('join fail');
 		}
 	});
 
-	socket.on('message', ({ room, message }) => {
-		console.log(`message sent in ${room}: ${message}`);
-		io.to(room).emit('message', message);
-	});
-
-	socket.on('leave', (room) => {
-		socket.leave(room);
-		console.log(`User left room: ${room}`);
+	socket.on('message', (message) => {
+		console.log(`message sent in ${room_name}: ${message}`);
+		io.to(room_name).emit('message', message);
 	});
 
 	socket.on('disconnect', () => {
-		console.log('user disconnected');
+		console.log('user disconnected', room_name);
+		if (room_name) {
+			room_participants[room_name] = room_participants[room_name].filter(
+				(name) => name != user_name
+			);
+			io.to(room_name).emit(
+				'participants',
+				JSON.stringify(room_participants[room_name])
+			);
+		}
 	});
 });
 

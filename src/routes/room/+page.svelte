@@ -6,7 +6,8 @@
 		start_connection,
 		end_connection,
 	} from './MessageStore';
-	import { user } from '../UserStore';
+	import { participants, user } from '../UserStore';
+	import { flip } from 'svelte/animate';
 
 	const submit = (event: any) => {
 		const input = event.target.input;
@@ -42,23 +43,25 @@
 			<button type="submit">send</button>
 		</form>
 	</div>
-	<!-- <div class="participants">
-		<h2>participants</h2>
-		<div>test</div>
-	</div> -->
+	<div class="participants">
+		<h2>{$user?.room.name}</h2>
+		{#each $participants as participant (participant)}
+			<div animate:flip={{}}>{participant}</div>
+		{/each}
+	</div>
 </main>
 
 <style>
 	main {
 		display: grid;
-		grid-template-columns: 1fr;
+		grid-template-columns: 1fr 400px;
 		height: 100vh;
 		width: 100vw;
 		overflow: hidden;
 		border: solid #aaa 1px;
 		box-sizing: border-box;
 	}
-	/* .participants {
+	.participants {
 		border-left: solid #aaa 1px;
 		display: flex;
 		flex-direction: column;
@@ -76,6 +79,7 @@
 		gap: 15px;
 		align-items: center;
 		font-size: 1.1em;
+		margin-bottom: 10px;
 	}
 	.participants > div::before {
 		content: '';
@@ -83,7 +87,7 @@
 		height: 10px;
 		border-radius: 100%;
 		background-color: rgb(123, 255, 47);
-	} */
+	}
 	.chat {
 		position: relative;
 		display: flex;
@@ -101,6 +105,7 @@
 		align-items: center;
 		color: #bbb;
 		font-size: 2em;
+		text-align: center;
 	}
 	form {
 		position: absolute;

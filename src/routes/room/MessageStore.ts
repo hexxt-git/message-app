@@ -1,7 +1,7 @@
 import { writable, type Writable } from 'svelte/store';
 import { type Message, type User } from '$lib/types';
 import { io } from 'socket.io-client';
-import { user } from '../UserStore';
+import { participants, user } from '../UserStore';
 import { notifier } from '@beyonk/svelte-notifications';
 import { goto } from '$app/navigation';
 
@@ -20,9 +20,18 @@ export const start_connection = () => {
 		return;
 	}
 
-	websocket.emit('join', user_instance.room);
+	websocket.emit('join', {
+		username: user_instance?.name,
+		...user_instance.room,
+	});
 
 	websocket.on('join success', () => {
+
+		websocket.on('participants', (new_participants) => {
+			console.log('new participants', new_participants);
+			participants.set(JSON.parse(new_participants));
+		});
+
 		websocket.on('message', (msg: string) => {
 			const new_message = JSON.parse(msg);
 
@@ -46,12 +55,9 @@ export const send_message = (msg: string) => {
 
 	const new_message = JSON.stringify(message_object);
 
-	websocket.emit('message', {
-		room: user_instance?.room.name,
-		message: new_message,
-	});
+	websocket.emit('message', new_message);
 };
 
 export const end_connection = () => {
-	websocket.emit('leave', user_instance?.room.name);
+	// websocket.disconnect()
 };
