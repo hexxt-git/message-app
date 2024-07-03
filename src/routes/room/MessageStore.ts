@@ -4,10 +4,11 @@ import { io } from 'socket.io-client';
 import { participants, user } from '../UserStore';
 import { notifier } from '@beyonk/svelte-notifications';
 import { goto } from '$app/navigation';
+import { backendlink } from '../../config';
 
 export const MessageStore: Writable<Message[]> = writable([]);
 
-const websocket = io('http://localhost:3000');
+const websocket = io(backendlink);
 let user_instance: User | null = null;
 
 export const start_connection = () => {
@@ -28,7 +29,6 @@ export const start_connection = () => {
 	websocket.on('join success', () => {
 
 		websocket.on('participants', (new_participants) => {
-			console.log('new participants', new_participants);
 			participants.set(JSON.parse(new_participants));
 		});
 

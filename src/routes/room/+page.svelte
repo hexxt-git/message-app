@@ -45,7 +45,7 @@
 	</div>
 	<div class="participants">
 		<h2>{$user?.room.name}</h2>
-		{#each $participants as participant (participant)}
+		{#each [...new Set($participants)] as participant (participant)}
 			<div animate:flip={{}}>{participant}</div>
 		{/each}
 	</div>

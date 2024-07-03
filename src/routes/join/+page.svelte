@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { user } from '../UserStore';
 	import type { User } from '$lib/types';
+	import { backendlink } from '../../config';
 
 	const new_user: User = {
 		name: '',
@@ -26,7 +27,7 @@
 	new_user.room.name = room_name ?? new_user.room.name;
 
 	const submit = () => {
-		fetch('http://localhost:3000/validate', {
+		fetch(backendlink + '/validate', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

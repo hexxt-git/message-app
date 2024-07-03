@@ -9,7 +9,7 @@
 		password: '',
 	};
 	const submit = () => {
-		fetch('http://localhost:3000/create', {
+		fetch(backendlink + '/create', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

@@ -54,7 +54,7 @@ app.post('/validate', (req, res) => {
 		res.status(400).send('room not found');
 		return;
 	}
-	if (room.password != new_user.room.password) {
+	if (room.password != new_user.room.password && room.is_private) {
 		if (new_user.room.password.length >= 1)
 			res.status(400).send('wrong password');
 		else res.status(400).send('password required');
@@ -63,6 +63,16 @@ app.post('/validate', (req, res) => {
 
 	res.send(`joined: ${room.name}`);
 	return;
+});
+
+app.get('/public', (req, res) => {
+	const public_rooms = rooms
+		.filter((room) => !room.is_private)
+		.map((room) => ({
+			...room,
+			participants: room_participants[room.name] || [],
+		}));
+	res.send(public_rooms);
 });
 
 io.on('connection', (socket) => {

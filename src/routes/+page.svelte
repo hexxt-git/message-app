@@ -6,8 +6,8 @@
 		>
 	</h2>
 	<h2>
-		to get started <a href="/create">create</a> or
-		<a href="/join">join</a> a room
+		to get started <a href="/create">create</a>,
+		<a href="/join">join</a> or <a href="/explore"> find </a> a room.
 	</h2>
 </main>
 
@@ -22,10 +22,10 @@
 		height: 100vh;
 		box-sizing: border-box;
 	}
-	h1{
+	h1 {
 		margin: 10px;
 	}
-	h2{
+	h2 {
 		margin: 0px;
 	}
 	a {
