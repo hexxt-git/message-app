@@ -3,6 +3,8 @@
 	import Form from '$lib/Form.svelte';
 	import type { Room } from '$lib/types';
 	import { notifier } from '@beyonk/svelte-notifications';
+	import {backendlink} from '../../config'
+
 	const new_room: Room = {
 		name: '',
 		is_private: true,
