@@ -27,6 +27,7 @@ const rooms: Room[] = [
 ];
 
 const room_participants: any = {};
+const room_messages: any = {};
 
 app.get('/', (req, res) => {
 	res.send('welcome');
@@ -85,11 +86,11 @@ io.on('connection', (socket) => {
 		if ((room && room.password == password) || (room && !room.is_private)) {
 			socket.join(name);
 			console.log(`User joined room: ${name}`);
-			socket.emit('join success');
+			socket.emit('join success', room_messages[name] ?? []);
 			user_name = username;
 			room_name = name;
 			room_participants[room_name] = [
-				...(room_participants[room_name] || []),
+				...(room_participants[room_name] ?? []),
 				user_name,
 			];
 			io.to(room_name).emit(
@@ -106,6 +107,10 @@ io.on('connection', (socket) => {
 
 	socket.on('message', (message) => {
 		console.log(`message sent in ${room_name}: ${message}`);
+		room_messages[room_name] = [
+			...(room_messages[room_name] ?? []),
+			JSON.parse(message),
+		];
 		io.to(room_name).emit('message', message);
 	});
 

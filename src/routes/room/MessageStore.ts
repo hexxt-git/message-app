@@ -26,7 +26,8 @@ export const start_connection = () => {
 		...user_instance.room,
 	});
 
-	websocket.on('join success', () => {
+	websocket.on('join success', (message_data) => {
+		MessageStore.set(message_data ?? [])
 
 		websocket.on('participants', (new_participants) => {
 			participants.set(JSON.parse(new_participants));
